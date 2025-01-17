@@ -248,5 +248,6 @@ exports.seed = async function(knex) {
       reponse4: 'Tokyo',
       bonne_reponse: 4
     }
+    
   ]);
 };

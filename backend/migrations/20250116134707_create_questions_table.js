@@ -1,20 +1,32 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
-exports.up = function(knex) {
-    return knex.schema.createTable('questions', (table) => {
-      table.increments('id').primary(); // ID auto-incrémenté
-      table.text('question').notNullable(); // Question
-      table.string('reponse1').notNullable(); // Réponse 1
-      table.string('reponse2').notNullable(); // Réponse 2
-      table.string('reponse3').notNullable(); // Réponse 3
-      table.string('reponse4').notNullable(); // Réponse 4
-      table.integer('bonne_reponse').notNullable(); // Numéro de la bonne réponse (1 à 4)
-    });
-  };
-  exports.down = function(knex) {
-    return knex.schema.dropTableIfExists('questions');
-  };
-  
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const sessionManager = require('./sessions/sessionManager');
 
+app.use(bodyParser.json());
+
+// Validation du code de session et du pseudo
+app.post('/api/join', (req, res) => {
+  const { sessionCode, pseudo } = req.body;
+
+  if (!sessionCode || !pseudo) {
+    return res.status(400).json({ success: false, message: 'Code de session et pseudo requis.' });
+  }
+
+  const session = sessionManager.getSession(sessionCode);
+
+  if (!session) {
+    return res.status(404).json({ success: false, message: 'Session introuvable.' });
+  }
+
+  // Ajouter le joueur à la session
+  session.players.push(pseudo);
+
+  return res.json({ success: true, message: 'Rejoint la session.', session });
+});
+
+// Lancer le serveur
+const PORT = 4000;
+app.listen(PORT, () => {
+  console.log(`Backend actif sur http://localhost:${PORT}`);
+});
