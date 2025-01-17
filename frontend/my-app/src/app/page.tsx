@@ -1,101 +1,134 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from "react";
+import axios from "axios";
+
+export default function Page() {
+  const [numQuestions, setNumQuestions] = useState<number>(0);
+  const [sessionCode, setSessionCode] = useState<string | null>(null);
+  const [players, setPlayers] = useState<string[]>([]); // Liste des joueurs
+  const [playerName, setPlayerName] = useState<string>(""); // Nom du joueur
+
+  // Fonction pour créer une session
+  const createSession = async () => {
+    if (numQuestions <= 0) {
+      alert("Please enter a valid number of questions.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:4000/sessions", {
+        num_questions: numQuestions,
+      });
+
+      setSessionCode(response.data.code); // Code de la session renvoyé par le backend
+      setPlayers([]); // Réinitialise les joueurs pour la nouvelle session
+    } catch (error) {
+      console.error("Error creating session:", error);
+      alert("Failed to create session. Please try again.");
+    }
+  };
+
+  // Fonction pour rejoindre une session
+  const joinSession = async () => {
+    if (!sessionCode || playerName.trim() === "") {
+      alert("Please enter a valid session code and player name.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `http://localhost:4000/sessions/${sessionCode}/join`,
+        {
+          player_name: playerName,
+        }
+      );
+
+      setPlayers(response.data.session.players); // Met à jour la liste des joueurs
+      setPlayerName(""); // Réinitialise le champ du nom du joueur
+    } catch (error) {
+      console.error("Error joining session:", error);
+      alert("Failed to join session. Please try again.");
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main style={{ padding: "20px" }}>
+      <h1>Trivia Game</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Formulaire pour créer une session */}
+      <div style={{ marginBottom: "20px" }}>
+        <h2>Create a Session</h2>
+        <label>
+          Number of Questions:
+          <input
+            type="number"
+            value={numQuestions}
+            onChange={(e) => setNumQuestions(parseInt(e.target.value))}
+            style={{ marginLeft: "10px" }}
+          />
+        </label>
+        <button
+          onClick={createSession}
+          style={{
+            marginLeft: "10px",
+            padding: "10px 20px",
+            backgroundColor: "blue",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Create Session
+        </button>
+      </div>
+
+      {/* Affichage du code de session */}
+      {sessionCode && (
+        <div style={{ marginTop: "20px" }}>
+          <h3>Session Created</h3>
+          <p>
+            Session Code: <strong>{sessionCode}</strong>
+          </p>
+          <p>Players in the session:</p>
+          <ul>
+            {players.map((player, index) => (
+              <li key={index}>{player}</li>
+            ))}
+          </ul>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      )}
+
+      {/* Formulaire pour rejoindre une session */}
+      {sessionCode && (
+        <div style={{ marginTop: "20px" }}>
+          <h3>Join the Session</h3>
+          <label>
+            Your Name:
+            <input
+              type="text"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              style={{ marginLeft: "10px" }}
+            />
+          </label>
+          <button
+            onClick={joinSession}
+            style={{
+              marginLeft: "10px",
+              padding: "10px 20px",
+              backgroundColor: "green",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Join Session
+          </button>
+        </div>
+      )}
+    </main>
   );
 }
