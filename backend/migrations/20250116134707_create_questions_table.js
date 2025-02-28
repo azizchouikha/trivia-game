@@ -25,7 +25,7 @@ app.post('/api/join', (req, res) => {
   return res.json({ success: true, message: 'Rejoint la session.', session });
 });
 
-// Lancer le serveur
+// lancement de serveur 
 const PORT = 4000;
 app.listen(PORT, () => {
   console.log(`Backend actif sur http://localhost:${PORT}`);
